@@ -5,6 +5,9 @@
   "main": "index.js",
   "license": "MIT",
   "type": "module",
+  "engines": {
+    "node": ">=16"
+  },  
   "scripts": {
     "dev": "cross-env NODE_ENV=development nodemon app",
     "start": "cross-env NODE_ENV=production node app"
