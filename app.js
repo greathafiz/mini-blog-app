@@ -14,6 +14,7 @@ import configurePassport from "./config/passport.js";
 import session from "express-session";
 import MongoStore from "connect-mongo";
 import { formatDate, truncate, editIcon, select } from "./helpers/hbs.js";
+import { ensureAuth } from "./middleware/auth.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -28,14 +29,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Method override
-app.use(methodOverride((req, res) => {
-  if (req.body && typeof req.body === 'object' && '_method' in req.body) {
-    // look in urlencoded POST bodies and delete it
-    let method = req.body._method
-    delete req.body._method
-    return method
-  }
-}))
+app.use(
+  methodOverride((req, res) => {
+    if (req.body && typeof req.body === "object" && "_method" in req.body) {
+      // look in urlencoded POST bodies and delete it
+      let method = req.body._method;
+      delete req.body._method;
+      return method;
+    }
+  })
+);
 
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
@@ -48,7 +51,7 @@ app.engine(
       formatDate,
       truncate,
       editIcon,
-      select
+      select,
     },
     defaultLayout: "main",
     extname: ".hbs",
@@ -72,16 +75,16 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Set global variable in order to make it accessible in hbs
-app.use((req,res,next) => {
-    res.locals.loggedUser = req.user || null
-    next()
-})
+app.use((req, res, next) => {
+  res.locals.loggedUser = req.user || null;
+  next();
+});
 
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", indexRouter);
 app.use("/auth", authRouter);
-app.use("/stories", storyRouter);
+app.use("/stories", ensureAuth, storyRouter);
 
 const PORT = process.env.PORT || 3000;
 
