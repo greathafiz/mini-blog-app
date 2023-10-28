@@ -7,6 +7,7 @@ import {engine} from 'express-handlebars'
 import connectDB from './config/db.js'
 import { indexRouter } from './routes/index.js'
 import { authRouter } from './routes/auth.js'
+import { storyRouter } from './routes/stories.js'
 import passport from "passport";
 import configurePassport from "./config/passport.js";
 import session from "express-session";
@@ -20,14 +21,21 @@ configurePassport(passport)
 
 
 connectDB()
-// const MongoStore = connectMongo(session);
 const app = express()
+
+app.use(express.json())
+app.use(express.urlencoded({extended: false}))
+
 
 if (process.env.NODE_ENV === 'development') {
     app.use(morgan('dev'))
 }
 
-app.engine('.hbs', engine({defaultLayout:'main', extname: '.hbs'}))
+import { formatDate } from "./helpers/hbs.js";
+
+app.engine('.hbs', engine({helpers: {
+    formatDate
+}, defaultLayout:'main', extname: '.hbs'}))
 app.set('view engine', '.hbs')
 app.set('views', './views');
 
@@ -47,6 +55,7 @@ app.use(express.static(path.join(__dirname, 'public')))
 
 app.use('/', indexRouter)
 app.use('/auth', authRouter)
+app.use('/stories', storyRouter)
 
 const PORT = process.env.PORT || 3000
 
